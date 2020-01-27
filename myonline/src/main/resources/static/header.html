@@ -1,0 +1,98 @@
+<link rel="stylesheet" href="elementui/index.css">
+<header id="header">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1" aria-expanded="false" style="float: left">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="home.html" style="float: right">首页</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+
+                </ul>
+                <div id="app">
+                    <ul class="nav navbar-nav">
+                        <li><a href="javascript:void(0);" @click="open('https://blog.csdn.net/qq_36450650')">Csdn博客地址</a></li>
+                        <li><a href="javascript:void(0);" @click="open('https://github.com/MuYaHai')">GitHub地址</a></li>
+                        <li><a href="advice.html">提出建议</a></li>
+                        <li><a href="explore.html">Music Visualization</a></li>
+                        <li><a href="pixel-graph.html">pixel-graph</a></li>
+                        <li><a href="#">{{username}}</a></li>
+                        <li class="active"><a href="#">注意：网站还在建设中.....</a> </li>
+                    </ul>
+                </div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="login.html">登录 <span class="sr-only">(current)</span></a></li>
+                    <li><a href="register.html">注册</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">更多 <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="about.html">关于我们</a></li>
+                            <li><a href="callMe.html">联系我们</a></li>
+                            <li><a href="https://www.html5tricks.com/tag/html5-3d/page/2">html5 3D</a></li>
+                            <li><a href="https://www.echartsjs.com/examples/zh/index.html#chart-type-flowGL">Echarts</a></li>
+                            <li><a href="#">Something else here</a></li>
+                            <li role="separator" class="divider"></li>
+                            <li><a href="#">Separated link</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+    </nav>
+</header>
+<!-- 引入组件库 -->
+<script src="js/vue.js"></script>
+<script src="elementui/index.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/axios-0.18.0.js"></script>
+<script>
+    var vue = new Vue({
+            el: '#app',
+            data: {
+                username: ""
+            },
+            methods: {
+                getQueryString() {
+                    var reg = new RegExp("(^|&)id=([^&]*)(&|$)", "i");
+                    var r = decodeURI(window.location.search).substr(1).match(reg);
+                    if (r != null) {
+                        this.id=unescape(r[2]);
+                        return unescape(r[2]);
+                    }else {
+                        return null;
+                    }
+                },
+                open(url) {
+                    this.$confirm('此操作将跳转网站, 询问你是否继续?', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                       location.href=url;
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '已取消跳转'
+                        });
+                    });
+                }
+            },
+            created() {
+                axios.get("/user/getUserInfo").then(res => {
+                    if (res.data.flag) {
+                        this.username = res.data.data.username+",欢迎你";
+                    }
+                });
+            }
+        });
+</script>

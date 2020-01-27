@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Twinkling Days</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="elementui/index.css">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="elementui/index.js"></script>
+    <!--font-awesome -->
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- 可选的Bootstrap主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+
+
+    <!--H-ui前端框架-->
+    <!--H-ui前端框架-->
+    <link href="H-ui-1.0.9/iconfont.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="css/reset.css"> <!-- CSS reset -->
+    <link rel="stylesheet" href="css/style.css"> <!-- Resource style -->
+    <script src="js/modernizr.js"></script> <!-- Modernizr -->
+
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+
+    <script src="js/jquery-3.2.1.min.js"></script>
+
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!--导入布局js，共享header和footer-->
+    <script type="text/javascript" src="js/include.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <script src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+<div id="header"></div>
+    <div id="app" style="padding-top: 100px;margin-left: 30%">
+        <h2>非常感谢提出你宝贵的意见！</h2>
+        <div style="padding-top: 20px"></div>
+        <el-form ref="form" :model="form" label-width="80px" :rules="rules">
+            <el-form-item label="您的名字">
+                <el-input v-model="form.name" style="width: 200px" placeholder="可以不用填写"></el-input>
+            </el-form-item>
+            <el-form-item label="性别">
+                <el-radio-group v-model="form.sex">
+                    <el-radio label="男"></el-radio>
+                    <el-radio label="女"></el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="意见建议" prop="text">
+                <el-input type="textarea" v-model="form.text" style="width: 500px" medium></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="submitForm('form')">立即创建</el-button>
+                <el-button @click="resetForm('form')">取消</el-button>
+            </el-form-item>
+        </el-form>
+</div>
+<div id="footer"></div>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data(){
+            return{
+                textarea: '',
+                form: {
+                    name: '',
+                    sex: '',
+                    text: ''
+                },
+                rules: {
+                    text: [
+                        { required: true, message: '这项要填啊，不然都没填的了', trigger: 'blur' }
+                    ]
+                }
+            }
+        } ,
+        methods: {
+            submitForm(form) {
+                this.$refs[form].validate((valid) => {
+                    if (valid) {
+                        axios.post("/user/put/advice",this.form).then(res=>{
+                            if (res.data.flag) {
+                                this.$message.success(res.data.message);
+                            } else {
+                                this.$message.error(res.data.message);
+                            }
+                        })
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            resetForm(form) {
+                this.$refs[form].resetFields();
+            }
+        }
+    })
+</script>
+</body>
+</html>

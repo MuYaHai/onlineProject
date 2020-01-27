@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Twinkling Days</title>
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="elementui/index.css">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="elementui/index.js"></script>
+    <!--font-awesome -->
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- 可选的Bootstrap主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+
+
+    <!--H-ui前端框架-->
+    <!--H-ui前端框架-->
+    <link href="H-ui-1.0.9/iconfont.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="css/reset.css"> <!-- CSS reset -->
+    <link rel="stylesheet" href="css/style.css"> <!-- Resource style -->
+    <script src="js/modernizr.js"></script> <!-- Modernizr -->
+
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/jquery-1.11.0.min.js"></script>
+
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!--导入布局js，共享header和footer-->
+    <script type="text/javascript" src="js/include.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <script src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+<div id="header"></div>
+<div id="app" style="padding-top: 100px;margin-left: 30%">
+    <div style="padding-bottom: 50px"><h2>温馨提示：注册必须需要密钥否则注册失败</h2></div>
+    <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="密钥" prop="key">
+            <el-input type="key" v-model="ruleForm.key" autocomplete="off" style="width: 300px"></el-input>
+        </el-form-item>
+        <el-form-item label="用户名" prop="username">
+            <el-input type="username" v-model="ruleForm.username" autocomplete="off" style="width: 300px"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+            <el-input type="password" v-model="ruleForm.password" autocomplete="off" style="width: 300px"></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="checkPass">
+            <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off" style="width: 300px"></el-input>
+        </el-form-item>
+        <el-form-item label="年龄" prop="age">
+            <el-input v-model.number="ruleForm.age" style="width: 300px"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
+            <el-button @click="resetForm('ruleForm')">重置</el-button>
+        </el-form-item>
+    </el-form>
+</div>
+<div id="footer"></div>
+<script>
+    new Vue( {
+        el: '#app',
+        data() {
+            var checkAge = (rule, value, callback) => {
+                if (!value) {
+                    return callback(new Error('年龄不能为空'));
+                }
+                setTimeout(() => {
+                    if (!Number.isInteger(value)) {
+                        callback(new Error('请输入数字值'));
+                    } else {
+                        if (value < 18) {
+                            callback(new Error('必须年满18岁'));
+                        } else {
+                            callback();
+                        }
+                    }
+                }, 1000);
+            };
+            var validatePass = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请输入密码'));
+                } else {
+                    if (this.ruleForm.checkPass !== '') {
+                        this.$refs.ruleForm.validateField('checkPass');
+                    }
+                    callback();
+                }
+            };
+            var validatePass2 = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请再次输入密码'));
+                } else if (value !== this.ruleForm.password) {
+                    callback(new Error('两次输入密码不一致!'));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                ruleForm: {
+                    password: '',
+                    checkPass: '',
+                    age: '',
+                    username: '',
+                    key: ''
+                },
+                rules: {
+                    password: [
+                        { validator: validatePass, trigger: 'blur' }
+                    ],
+                    checkPass: [
+                        { validator: validatePass2, trigger: 'blur' }
+                    ],
+                    age: [
+                        { validator: checkAge, trigger: 'blur' }
+                    ],
+                    username: [
+                        { required: true, message: '请输入用户名', trigger: 'blur' }
+                    ],
+                    key: [
+                        { required: true, message: '密钥必填，密钥由管理员提供', trigger: 'blur' }
+                    ]
+                }
+            };
+        },
+        methods: {
+            submitForm(ruleForm) {
+                this.$refs[ruleForm].validate((valid) => {
+                    if (valid) {
+                        axios.post("/user/register", this.ruleForm).then(res => {
+                            if (res.data.flag) {
+                                location.href = "login.html";
+                                this.$message.success(res.data.message);
+                            } else {
+                                this.$message.error(res.data.message);
+                            }
+                        });
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            resetForm(ruleForm) {
+                this.$refs[ruleForm].resetFields();
+            }
+        }
+    });
+</script>
+</body>
+</html>

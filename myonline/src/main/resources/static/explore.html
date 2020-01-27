@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+<head>
+    <meta charset="utf-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="elementui/index.css">
+    <!-- 引入组件库 -->
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="elementui/index.js"></script>
+    <!--font-awesome -->
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- 可选的Bootstrap主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+
+
+    <!--H-ui前端框架-->
+    <!--H-ui前端框架-->
+    <link href="H-ui-1.0.9/iconfont.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="css/reset.css"> <!-- CSS reset -->
+    <link rel="stylesheet" href="css/style.css"> <!-- Resource style -->
+    <script src="js/modernizr.js"></script> <!-- Modernizr -->
+
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/jquery-1.11.0.min.js"></script>
+
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!--导入布局js，共享header和footer-->
+    <script type="text/javascript" src="js/include.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+<body style="height: 100%; margin: 0">
+<div id="header"></div>
+<div id="container" style="height: 100%">
+</div>
+<div id="app">
+    <div class="app-container">
+        <div class="box">
+            <!-- 新增标签弹层 -->
+            <div class="add-form" style="width: 200px;">
+                <el-dialog title="温馨提示，会播放音乐。使用IE浏览器体验更佳！" :visible.sync="dialogFormVisible">
+                    <span>不建议手机访问，如使用手机请退出，否者会出现闪屏！</span>
+                    <div slot="footer" class="dialog-footer">
+                        <el-button @click="back()">退出</el-button>
+                        <el-button type="primary" @click="handle()">确定</el-button>
+                    </div>
+                </el-dialog>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts-gl/dist/echarts-gl.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts-stat/dist/ecStat.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/extension/dataTool.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/map/js/china.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/map/js/world.js"></script>
+<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=qdM6veSZRwy05MAVOaQkGsv7avCxZZmr"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts/dist/extension/bmap.min.js"></script>
+<script type="text/javascript" src="/js/jquery-3.3.1.min.js"></script>
+<script type="text/javascript">
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+    var app = {};
+    option = null;
+    var UPDATE_DURATION = 100;
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    var audioContext = new AudioContext();
+    var vue = new Vue({
+        el: '#app',
+        data:{
+            dialogFormVisible: true//控制添加窗口显示/隐藏
+        },
+        methods: {
+            back() {
+                this.dialogFormVisible = false;
+                location.href = 'home.html';
+            },
+            // 弹出添加窗口
+            handleCreate() {
+                this.dialogFormVisible = true;
+            },
+            handle(){
+                this.dialogFormVisible = false;
+                var oReq = new XMLHttpRequest();
+                oReq.open('GET', 'http://localhost:8080/map/456.mp3', true);
+                oReq.responseType = 'arraybuffer';
+                oReq.onload = function (e) {
+                    audioContext.decodeAudioData(oReq.response, initVisualizer);
+                };
+                oReq.send();
+            }
+        }
+    });
+
+    function initVisualizer(audioBuffer) {
+        inited = true;
+
+        var source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+
+        // Must invoked right after click event
+        if (source.noteOn) {
+            source.noteOn(0);
+        } else {
+            source.start(0);
+        }
+
+        var analyzer = audioContext.createAnalyser();
+        var gainNode = audioContext.createGain();
+        analyzer.fftSize = 4096;
+
+        gainNode.gain.value = 1;
+        source.connect(gainNode);
+        gainNode.connect(analyzer);
+        analyzer.connect(audioContext.destination);
+
+        var frequencyBinCount = analyzer.frequencyBinCount;
+        var dataArray = new Uint8Array(frequencyBinCount);
+
+
+        var beta = 0;
+
+        function update() {
+            analyzer.getByteFrequencyData(dataArray);
+
+            var item = [];
+            var size = 50;
+            var dataProvider = [];
+
+            for (var i = 0; i < size * size; i++) {
+                var x = i % size;
+                var y = Math.floor(i / size);
+                var dx = x - size / 2;
+                var dy = y - size / 2;
+
+                var angle = Math.atan2(dy, dx);
+                if (angle < 0) {
+                    angle = Math.PI * 2 + angle;
+                }
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                var idx = Math.min(
+                    frequencyBinCount - 1, Math.round(angle / Math.PI / 2 * 60 + dist * 60) + 100
+                );
+
+                var val = Math.pow(dataArray[idx] / 100, 3);
+                dataProvider.push([x, y, Math.max(val, 0.1)]);
+            }
+
+            myChart.setOption({
+                grid3D: {
+                    viewControl: {
+                        beta: beta,
+                        alpha: Math.sin(beta / 10 + 40) * (beta % 10 + 5) / 15 * 30 + 30,
+                        distance: Math.cos(beta / 50 + 20) * (beta % 10 + 5) / 15 * 50 + 80,
+                        animationDurationUpdate: UPDATE_DURATION,
+                        animationEasingUpdate: 'linear'
+                    }
+                },
+                series: [{
+                    data: dataProvider
+                }]
+            });
+            beta += 2;
+
+            setTimeout(update, UPDATE_DURATION);
+        };
+
+        update();
+    }
+
+    option = {
+        tooltip: {},
+        visualMap: {
+            show: false,
+            min: 0.1,
+            max: 4,
+            inRange: {
+                color: ['#010103', '#2f490c', '#b0b70f', '#fdff44', '#fff']
+            }
+        },
+        xAxis3D: {
+            type: 'value'
+        },
+        yAxis3D: {
+            type: 'value'
+        },
+        zAxis3D: {
+            type: 'value',
+            min: -6,
+            max: 6
+        },
+        grid3D: {
+            show: false,
+            environment: '#000',
+            viewControl: {
+                distance: 100
+            },
+            postEffect: {
+                enable: true,
+                FXAA: {
+                    enable: true
+                }
+            },
+            light: {
+                main: {
+                    shadow: true,
+                    intensity: 10,
+                    quality: 'high'
+                },
+                ambientCubemap: {
+                    texture: 'data-gl/asset/canyon.hdr',
+                    exposure: 0,
+                    diffuseIntensity: 0.2
+                }
+            }
+        },
+        series: [{
+            type: 'bar3D',
+            silent: true,
+            shading: 'lambert',
+            data: [],
+            barSize: 1,
+            lineStyle: {
+                width: 4
+            },
+            // animation: false,
+            animationDurationUpdate: UPDATE_DURATION
+        }]
+    };
+    if (option && typeof option === "object") {
+        myChart.setOption(option, true);
+    }
+</script>
+</body>
+</html>
